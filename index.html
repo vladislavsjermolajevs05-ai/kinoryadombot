@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кинорядом 🎬</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #141414;
+    color: #fff;
+  }
+  header {
+    text-align: center;
+    padding: 16px;
+    font-size: 24px;
+    font-weight: bold;
+    background: #1a1a1a;
+  }
+  #searchBar {
+    display: flex;
+    justify-content: center;
+    margin: 12px;
+  }
+  #searchBar input {
+    width: 60%;
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: none;
+    font-size: 14px;
+  }
+  #searchBar button {
+    margin-left: 8px;
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: none;
+    background: #e50914;
+    color: #fff;
+    cursor: pointer;
+  }
+  .section {
+    margin: 12px 0;
+  }
+  .section h2 {
+    margin-left: 12px;
+    font-size: 16px;
+  }
+  .carousel {
+    display: flex;
+    overflow-x: auto;
+    padding: 12px;
+    gap: 8px;
+  }
+  .carousel::-webkit-scrollbar {
+    display: none;
+  }
+  .card {
+    min-width: 100px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.3s;
+    flex-shrink: 0;
+    text-align: center;
+  }
+  .card:hover {
+    transform: scale(1.1);
+    z-index: 10;
+  }
+  .card img {
+    width: 100%;
+    display: block;
+    border-radius: 8px;
+  }
+  .overlay {
+    position: absolute;
+    bottom: 2px;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    opacity: 1;
+  }
+  .overlay button {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: #fff;
+    padding: 2px 4px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  #profile {
+    padding: 12px;
+    margin: 12px;
+    background: #1a1a1a;
+    border-radius: 12px;
+  }
+  #profile h2 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+  }
+  #profile ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  #profile li {
+    font-size: 12px;
+    margin-bottom: 4px;
+  }
+
+  /* Модальное окно для трейлера */
+  #trailerModal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    top:0; left:0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    justify-content: center;
+    align-items: center;
+  }
+  #trailerModal iframe {
+    width: 90%;
+    height: 60%;
+    border: none;
+    border-radius: 12px;
+  }
+  #closeModal {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: #e50914;
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    padding: 6px 10px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  /* Модальное окно для описания снизу */
+  #descriptionModal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    bottom: 0;
+    width: 100%;
+    max-height: 70%;
+    background: #1a1a1a;
+    border-radius: 16px 16px 0 0;
+    overflow-y: auto;
+    padding: 16px;
+    box-sizing: border-box;
+    transition: transform 0.3s ease;
+  }
+  #descriptionModal img {
+    float: left;
+    width: 120px;
+    border-radius: 8px;
+    margin-right: 12px;
+  }
+  #descriptionModal h2 {
+    margin: 0 0 8px 0;
+  }
+  #descriptionModal p {
+    font-size: 14px;
+  }
+  #closeDescription {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #e50914;
+    border: none;
+    color: #fff;
+    font-size: 16px;
+    padding: 4px 8px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<header>Кинорядом 🎬</header>
+
+<div id="searchBar">
+  <input type="text" id="searchInput" placeholder="Искать фильм или сериал...">
+  <button onclick="searchMovie()">🔍</button>
+</div>
+
+<div class="section">
+  <h2>Популярные фильмы</h2>
+  <div class="carousel" id="popularCarousel"></div>
+</div>
+
+<div class="section">
+  <h2>Популярные сериалы</h2>
+  <div class="carousel" id="seriesCarousel"></div>
+</div>
+
+<div class="section">
+  <h2>Новинки</h2>
+  <div class="carousel" id="newCarousel"></div>
+</div>
+
+<div id="profile">
+  <h2>Избранное ❤️</h2>
+  <ul id="favoritesList">
+    <li>Пока ничего нет</li>
+  </ul>
+</div>
+
+<!-- Модальное окно трейлера -->
+<div id="trailerModal">
+  <button id="closeModal" onclick="closeTrailer()">❌</button>
+  <iframe id="trailerFrame" src="" allowfullscreen></iframe>
+</div>
+
+<!-- Модальное окно описания -->
+<div id="descriptionModal">
+  <button id="closeDescription" onclick="closeDescription()">❌</button>
+  <img id="descPoster" src="" alt="">
+  <div>
+    <h2 id="descTitle"></h2>
+    <p id="descOverview"></p>
+  </div>
+</div>
+
+<script>
+const API_KEY = "1ea789320e9a8e2b6a8239e9620efd28";
+let favorites = [];
+
+function fetchMoviesForSection(url, containerId, type="movie") {
+  fetch(url)
+    .then(res => res.json())
+    .then(data => displayMovies(data.results, containerId, type))
+    .catch(err => console.error(err));
+}
+
+function displayMovies(movies, containerId, type="movie") {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+  movies.forEach(m => {
+    const id = m.id;
+    const title = m.title || m.name;
+    const overview = m.overview || "Описание отсутствует";
+    const poster = `https://image.tmdb.org/t/p/w200${m.poster_path}`;
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      <img src="${poster}" alt="${title}">
+      <div class="overlay">
+        <button onclick="toggleFavorite('${title}')"><i class="fas fa-heart"></i></button>
+        <button onclick="watchTrailer('${id}', '${type}')"><i class="fas fa-play"></i></button>
+        <button onclick="showInfo('${title}')"><i class="fas fa-info"></i></button>
+      </div>
+    `;
+    // Двойной клик для открытия описания
+    div.ondblclick = () => openDescription(title, poster, overview);
+    container.appendChild(div);
+  });
+}
+
+function toggleFavorite(name) {
+  if (!favorites.includes(name)) {
+    favorites.push(name);
+    updateFavorites();
+  }
+}
+
+function updateFavorites() {
+  const list = document.getElementById("favoritesList");
+  list.innerHTML = "";
+  if (favorites.length === 0) {
+    list.innerHTML = "<li>Пока ничего нет</li>";
+    return;
+  }
+  favorites.forEach(f => {
+    const li = document.createElement("li");
+    li.textContent = f;
+    list.appendChild(li);
+  });
+}
+
+// Трейлер
+function watchTrailer(id, type) {
+  fetch(`https://api.themoviedb.org/3/${type}/${id}/videos?api_key=${API_KEY}&language=ru-RU`)
+    .then(res => res.json())
+    .then(data => {
+      const trailer = data.results.find(v => v.type === "Trailer" && v.site === "YouTube");
+      if (trailer) {
+        document.getElementById("trailerFrame").src = `https://www.youtube.com/embed/${trailer.key}?autoplay=1`;
+        document.getElementById("trailerModal").style.display = "flex";
+      } else {
+        alert("Трейлер не найден 😢");
+      }
+    });
+}
+
+function closeTrailer() {
+  document.getElementById("trailerFrame").src = "";
+  document.getElementById("trailerModal").style.display = "none";
+}
+
+// Описание снизу
+function openDescription(title, poster, overview) {
+  document.getElementById("descTitle").textContent = title;
+  document.getElementById("descPoster").src = poster;
+  document.getElementById("descOverview").textContent = overview;
+  document.getElementById("descriptionModal").style.display = "block";
+}
+
+function closeDescription() {
+  document.getElementById("descriptionModal").style.display = "none";
+}
+
+function showInfo(name) {
+  alert("Информация о фильме/сериале: " + name);
+}
+
+function searchMovie() {
+  const query = document.getElementById("searchInput").value;
+  fetchMoviesForSection(
+    `https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=ru-RU&page=1`,
+    "popularCarousel"
+  );
+}
+
+// Загрузка секций
+fetchMoviesForSection(`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=ru-RU&page=1`, "popularCarousel", "movie");
+fetchMoviesForSection(`https://api.themoviedb.org/3/tv/popular?api_key=${API_KEY}&language=ru-RU&page=1`, "seriesCarousel", "tv");
+fetchMoviesForSection(`https://api.themoviedb.org/3/movie/now_playing?api_key=${API_KEY}&language=ru-RU&page=1`, "newCarousel", "movie");
+
+</script>
+</body>
+</html>
