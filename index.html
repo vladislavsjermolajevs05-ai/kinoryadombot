@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кинорядом 🎬</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<header>Кинорядом 🎬</header>
+
+<div id="searchBar">
+  <input type="text" id="searchInput" placeholder="Искать фильм или сериал...">
+  <button id="searchBtn">🔍</button>
+</div>
+
+<div id="filters">
+  <select id="genreFilter"><option value="">Все жанры</option></select>
+  <select id="yearFilter"><option value="">Все годы</option></select>
+  <select id="ratingFilter"><option value="">Все рейтинги</option></select>
+</div>
+
+<div class="section"><h2>Популярные фильмы</h2><div class="carousel" id="popularCarousel"></div></div>
+<div class="section"><h2>Популярные сериалы</h2><div class="carousel" id="seriesCarousel"></div></div>
+<div class="section"><h2>Новинки</h2><div class="carousel" id="newCarousel"></div></div>
+
+<div id="profile">
+  <h2>Профиль 🎯</h2>
+  <ul id="favoritesList"><li>Пока ничего нет</li></ul>
+  <ul id="historyList"><li>История просмотров пока пуста</li></ul>
+</div>
+
+<div id="trailerModal"><button id="closeModal">❌</button>
+<iframe id="trailerFrame" src="" allowfullscreen></iframe></div>
+
+<div id="descriptionModal">
+<button id="closeDescription">❌</button>
+<img id="descPoster" src="" alt="">
+<div>
+<h2 id="descTitle"></h2>
+<p id="descOverview"></p>
+<button id="watchTrailerBtn">▶ Смотреть трейлер</button>
+<button id="addFavoriteBtn">❤️ В избранное</button>
+</div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/filters.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
