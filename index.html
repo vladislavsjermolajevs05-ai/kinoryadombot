@@ -1,0 +1,132 @@
+<script>
+const API_KEY="1ea789320e9a8e2b6a8239e9620efd28";
+let allMovies=[], currentDescription=null;
+
+// Получаем данные из LocalStorage
+let favorites = JSON.parse(localStorage.getItem("favorites")||"[]");
+let history = JSON.parse(localStorage.getItem("history")||"[]");
+
+// Темная/светлая тема
+document.getElementById("toggleTheme").onclick=()=>document.body.classList.toggle("light");
+
+// Профиль
+const profileEl = document.getElementById("profile");
+document.getElementById("profileBtn").onclick=()=>{
+  profileEl.style.display = profileEl.style.display==="block"?"none":"block";
+  updateFavorites();
+  updateHistory();
+}
+
+// Кнопка Кинорядом → главная
+document.getElementById("mainButton").onclick=()=>window.scrollTo({top:0, behavior:'smooth'});
+
+// Секции с категориями
+const sections = [
+  {url:`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=ru-RU&page=1`, container:"recommendedCarousel", type:"movie"},
+  {url:`https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&with_genres=16&language=ru-RU&page=1`, container:"cartoonsCarousel", type:"movie"}, // мультфильмы
+  {url:`https://api.themoviedb.org/3/tv/popular?api_key=${API_KEY}&language=ru-RU&page=1`, container:"seriesCarousel", type:"tv"},
+  {url:`https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&with_genres=16&language=ru-RU&page=1`, container:"animeCarousel", type:"tv"} // аниме
+];
+
+// Загрузка всех секций
+async function loadAllSections(){
+  await Promise.all(sections.map(async s=>{
+    const data = await fetch(s.url).then(r=>r.json());
+    data.results.forEach(m=>{ m.type=s.type; allMovies.push(m); });
+    displayMovies(data.results,s.container,s.type);
+  }));
+}
+loadAllSections();
+
+// Отображение карточек
+function displayMovies(movies,containerId,type="movie"){
+  const container=document.getElementById(containerId);
+  container.innerHTML="";
+  movies.forEach(m=>{
+    const id=m.id;
+    const title=m.title||m.name;
+    const overview=m.overview||"Описание отсутствует";
+    const poster=m.poster_path?`https://image.tmdb.org/t/p/w200${m.poster_path}`:"";
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`<img src="${poster}" alt="${title}"><div class="overlay">
+    <button onclick="toggleFavorite('${title}')"><i class="fas fa-heart"></i></button>
+    <button onclick="watchTrailer('${id}','${type}')"><i class="fas fa-play"></i></button>
+    <button onclick="openDescription({id:'${id}',title:'${title}',poster:'${poster}',overview:'${overview.replace(/'/g,"\\'")}',type:'${type}'})"><i class="fas fa-info"></i></button>
+    </div>`;
+    div.ondblclick=()=>openDescription({id,title,poster,overview,type});
+    container.appendChild(div);
+  });
+}
+
+// Функции избранного и истории
+function toggleFavorite(title){
+  if(!favorites.includes(title)) favorites.push(title);
+  else favorites = favorites.filter(f=>f!==title);
+  localStorage.setItem("favorites",JSON.stringify(favorites));
+  updateFavorites();
+}
+
+function addHistory(title){
+  if(!history.includes(title)) history.unshift(title);
+  if(history.length>20) history.pop();
+  localStorage.setItem("history",JSON.stringify(history));
+  updateHistory();
+}
+
+function updateFavorites(){
+  const list=document.getElementById("favoritesList");
+  list.innerHTML = "";
+  if(favorites.length===0){ list.innerHTML="<li>Пока ничего нет</li>"; return;}
+  favorites.forEach(f=>{ const li=document.createElement("li"); li.textContent=f; list.appendChild(li); });
+}
+
+function updateHistory(){
+  const list=document.getElementById("historyList");
+  list.innerHTML = "";
+  if(history.length===0){ list.innerHTML="<li>История просмотров пока пуста</li>"; return;}
+  history.forEach(f=>{ const li=document.createElement("li"); li.textContent=f; list.appendChild(li); });
+}
+
+// Трейлер
+function watchTrailer(id,type){
+  fetch(`https://api.themoviedb.org/3/${type}/${id}/videos?api_key=${API_KEY}&language=ru-RU`)
+    .then(res=>res.json())
+    .then(data=>{
+      const trailer=data.results.find(v=>v.type==="Trailer"&&v.site==="YouTube");
+      if(trailer){
+        document.getElementById("trailerFrame").src=`https://www.youtube.com/embed/${trailer.key}?autoplay=1`;
+        document.getElementById("trailerModal").style.display="flex";
+        if(currentDescription) addHistory(currentDescription.title);
+      }else alert("Трейлер не найден 😢");
+    });
+}
+document.getElementById("closeModal").onclick=()=>{
+  document.getElementById("trailerFrame").src="";
+  document.getElementById("trailerModal").style.display="none";
+}
+
+// Описание
+function openDescription(movie){
+  currentDescription=movie;
+  document.getElementById("descTitle").textContent=movie.title;
+  document.getElementById("descPoster").src=movie.poster;
+  document.getElementById("descOverview").textContent=movie.overview;
+  document.getElementById("descriptionModal").style.display="block";
+  addHistory(movie.title);
+}
+document.getElementById("closeDescription").onclick=()=>document.getElementById("descriptionModal").style.display="none";
+document.getElementById("watchTrailerBtn").onclick=()=>{if(currentDescription) watchTrailer(currentDescription.id,currentDescription.type);}
+document.getElementById("addFavoriteBtn").onclick=()=>{if(currentDescription) toggleFavorite(currentDescription.title);}
+
+// Поиск
+document.getElementById("searchBtn").onclick=()=>{
+  const query=document.getElementById("searchInput").value;
+  if(!query) return;
+  fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=ru-RU&page=1`)
+    .then(r=>r.json())
+    .then(data=>{
+      displayMovies(data.results,"recommendedCarousel");
+    });
+}
+</script>
